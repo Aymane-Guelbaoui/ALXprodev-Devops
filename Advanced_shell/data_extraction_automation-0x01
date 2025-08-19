@@ -1,0 +1,20 @@
+#!/bin/bash
+# Task 1: Extract Pikachu's details using jq, awk, sed
+
+FILE="data.json"
+
+if [ ! -f "$FILE" ]; then
+  echo "Error: data.json not found. Run apiAutomation-0x00 first."
+  exit 1
+fi
+
+NAME=$(jq -r '.name' "$FILE" | sed 's/.*/\u&/')   # Capitalize first letter
+HEIGHT=$(jq -r '.height' "$FILE")
+WEIGHT=$(jq -r '.weight' "$FILE")
+TYPE=$(jq -r '.types[0].type.name' "$FILE" | sed 's/.*/\u&/')
+
+# Convert height from decimeters → meters, weight from hectograms → kg
+HEIGHT_M=$(awk "BEGIN {print $HEIGHT/10}")
+WEIGHT_KG=$(awk "BEGIN {print $WEIGHT/10}")
+
+echo "$NAME is of type $TYPE, weighs ${WEIGHT_KG}kg, and is ${HEIGHT_M}m tall."
