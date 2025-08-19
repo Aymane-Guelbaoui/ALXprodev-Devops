@@ -1,0 +1,30 @@
+#!/bin/bash
+# Task 5: Fetch Pokémon data in parallel
+
+POKEMON_LIST=("bulbasaur" "ivysaur" "venusaur" "charmander" "charmeleon")
+OUT_DIR="pokemon_data_parallel"
+ERROR_FILE="errors.txt"
+
+mkdir -p "$OUT_DIR"
+
+fetch_pokemon() {
+  local name=$1
+  local url="https://pokeapi.co/api/v2/pokemon/$name"
+  local output="$OUT_DIR/$name.json"
+
+  STATUS=$(curl -s -o "$output" -w "%{http_code}" "$url")
+  if [ "$STATUS" -eq 200 ]; then
+    echo "Saved data to $output ✅"
+  else
+    echo "Error: Failed to fetch data for $name (Status: $STATUS)" >> "$ERROR_FILE"
+    rm -f "$output"
+  fi
+}
+
+echo "Fetching Pokémon in parallel..."
+for p in "${POKEMON_LIST[@]}"; do
+  fetch_pokemon "$p" &
+done
+
+wait  # wait for all background jobs to finish
+echo "All parallel fetches complete."
