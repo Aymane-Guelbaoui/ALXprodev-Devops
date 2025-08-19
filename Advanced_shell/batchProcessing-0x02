@@ -1,0 +1,36 @@
+#!/bin/bash
+# Task 2 & 4: Fetch multiple Pokémon data with retry logic
+
+POKEMON_LIST=("bulbasaur" "ivysaur" "venusaur" "charmander" "charmeleon")
+OUT_DIR="pokemon_data"
+ERROR_FILE="errors.txt"
+
+mkdir -p "$OUT_DIR"
+
+fetch_pokemon() {
+  local name=$1
+  local url="https://pokeapi.co/api/v2/pokemon/$name"
+  local output="$OUT_DIR/$name.json"
+
+  echo "Fetching data for $name..."
+
+  # Retry up to 3 times
+  for attempt in 1 2 3; do
+    STATUS=$(curl -s -o "$output" -w "%{http_code}" "$url")
+    if [ "$STATUS" -eq 200 ]; then
+      echo "Saved data to $output ✅"
+      return 0
+    else
+      echo "Attempt $attempt failed for $name (Status: $STATUS)"
+      sleep 2
+    fi
+  done
+
+  echo "Error: Failed to fetch data for $name after 3 attempts." >> "$ERROR_FILE"
+  rm -f "$output"
+}
+
+for p in "${POKEMON_LIST[@]}"; do
+  fetch_pokemon "$p"
+  sleep 1  # delay to avoid rate limiting
+done
