@@ -1,0 +1,34 @@
+#!/bin/bash
+# Task 3: Summarize Pokémon data into CSV with averages
+
+OUT_DIR="pokemon_data"
+REPORT="pokemon_report.csv"
+
+if [ ! -d "$OUT_DIR" ]; then
+  echo "Error: pokemon_data directory not found. Run batchProcessing-0x02 first."
+  exit 1
+fi
+
+echo "Name,Height (m),Weight (kg)" > "$REPORT"
+
+for file in "$OUT_DIR"/*.json; do
+  NAME=$(jq -r '.name' "$file" | sed 's/.*/\u&/')
+  HEIGHT=$(jq -r '.height' "$file")
+  WEIGHT=$(jq -r '.weight' "$file")
+
+  HEIGHT_M=$(awk "BEGIN {print $HEIGHT/10}")
+  WEIGHT_KG=$(awk "BEGIN {print $WEIGHT/10}")
+
+  echo "$NAME,$HEIGHT_M,$WEIGHT_KG" >> "$REPORT"
+done
+
+echo "" >> "$REPORT"
+
+# Compute averages
+AVG_HEIGHT=$(awk -F',' 'NR>1 {sum+=$2; count++} END {if (count>0) print sum/count}' "$REPORT")
+AVG_WEIGHT=$(awk -F',' 'NR>1 {sum+=$3; count++} END {if (count>0) print sum/count}' "$REPORT")
+
+echo "Average Height: ${AVG_HEIGHT} m" >> "$REPORT"
+echo "Average Weight: ${AVG_WEIGHT} kg" >> "$REPORT"
+
+echo "CSV Report generated at: $REPORT"
